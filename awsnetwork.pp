@@ -1,15 +1,18 @@
+#creeren van VPC
 ec2_vpc { 'webvpc':                                             #Naam van VPC
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
  cidr_block => '10.0.0.0/16',                                   #Defineer NetworkID/Subnet
  }
 
+#Het aanmaken van de Internet Gateway
 ec2_vpc_internet_gateway { 'webvpc-igw':                        #Naam van de Gateway
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
  vpc => 'webvpc',                                               #Koppelen aan je VPC
  }
 
+#Security group voor SSH
 ec2_securitygroup { 'secsg-ssh':                                #Naam van Security Group
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -22,6 +25,7 @@ ec2_securitygroup { 'secsg-ssh':                                #Naam van Securi
    }]
  }
 
+#Security group voor NAT
 ec2_securitygroup { 'secnat':                                   #Naam van Security Group
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -47,6 +51,7 @@ ec2_securitygroup { 'secnat':                                   #Naam van Securi
    ]
 }
 
+#Security group voor het pingen van de machines
 ec2_securitygroup { 'pinggroup':
  ensure => present,
  region => 'eu-central-1',
@@ -60,7 +65,7 @@ ec2_securitygroup { 'pinggroup':
 
  }
 
-
+#Aanmaken route table voor de public subnet
 ec2_vpc_routetable { 'webvpc-rt-pub-1a':                        #Naam voor je public route table
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -76,6 +81,7 @@ ec2_vpc_routetable { 'webvpc-rt-pub-1a':                        #Naam voor je pu
   ],
  }
 
+#Aanmaken van de public subnet
 ec2_vpc_subnet { 'webvpc-pub-1a':                               #Naam voor public subnet
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -85,7 +91,7 @@ ec2_vpc_subnet { 'webvpc-pub-1a':                               #Naam voor publi
  route_table => 'webvpc-rt-pub-1a',                             #Welke route table wordt gekoppeld
  }
 
-
+#NAT instance aanmaken
 ec2_instance { 'webvpc-nat-1a':                                 #Naam van de Instance
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -100,6 +106,7 @@ ec2_instance { 'webvpc-nat-1a':                                 #Naam van de Ins
  associate_public_ip_address=> true,                            #Optie voor Public IP
  }
 
+#Route table aanmaken voor private subnet
 ec2_vpc_routetable { 'webvpc-rt-priv-1a':                       #Naam route table
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region
@@ -114,6 +121,7 @@ ec2_vpc_routetable { 'webvpc-rt-priv-1a':                       #Naam route tabl
   ]
  }
 
+#Private subnet aanmaken voor de machines
 ec2_vpc_subnet { 'webvpc-priv-1a':                              #Naam subnet
  ensure => present,                                             #Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',                                      #Defineer Region

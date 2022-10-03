@@ -1,15 +1,18 @@
+#VPC aanmaken
 ec2_vpc { 'webvpc':						#Naam van VPC
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
  cidr_block => '10.0.0.0/16',					#Defineer NetworkID/Subnet
  }
 
+#Internet gateway aanmaken
 ec2_vpc_internet_gateway { 'webvpc-igw':			#Naam van de Gateway
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
  vpc => 'webvpc',						#Koppelen aan je VPC
  }
 
+#Security group voor SSH
 ec2_securitygroup { 'secsg-ssh':				#Naam van Security Group
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -22,6 +25,7 @@ ec2_securitygroup { 'secsg-ssh':				#Naam van Security Group
    }]
  }
 
+#Security group voor NAT
 ec2_securitygroup { 'secnat':					#Naam van Security Group
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -73,6 +77,7 @@ ec2_securitygroup { 'secnat':					#Naam van Security Group
 
 # }
 
+#Security group voor machines pingen
 ec2_securitygroup { 'pinggroup':
  ensure => present,
  region => 'eu-central-1',
@@ -86,7 +91,7 @@ ec2_securitygroup { 'pinggroup':
 
  }
 
-
+#Route table voor public subet
 ec2_vpc_routetable { 'webvpc-rt-pub-1a':			#Naam voor je public route table
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -102,6 +107,7 @@ ec2_vpc_routetable { 'webvpc-rt-pub-1a':			#Naam voor je public route table
   ],
  }
 
+#Public subnet aanmaken
 ec2_vpc_subnet { 'webvpc-pub-1a':				#Naam voor public subnet
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -111,7 +117,7 @@ ec2_vpc_subnet { 'webvpc-pub-1a':				#Naam voor public subnet
  route_table => 'webvpc-rt-pub-1a',				#Welke route table wordt gekoppeld
  }
 
-
+#NAT Instance aanmaken
 ec2_instance { 'webvpc-nat-1a':					#Naam van de Instance
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -126,7 +132,7 @@ ec2_instance { 'webvpc-nat-1a':					#Naam van de Instance
  associate_public_ip_address=> true,				#Optie voor Public IP
  }
 
-
+#Route table voor private subet
 ec2_vpc_routetable { 'webvpc-rt-priv-1a':			#Naam route table
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -141,6 +147,7 @@ ec2_vpc_routetable { 'webvpc-rt-priv-1a':			#Naam route table
   ] 
  }
 
+#Private subnet aanmaken
 ec2_vpc_subnet { 'webvpc-priv-1a':				#Naam subnet
  ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
  region => 'eu-central-1',					#Defineer Region
@@ -150,24 +157,25 @@ ec2_vpc_subnet { 'webvpc-priv-1a':				#Naam subnet
  route_table => 'webvpc-rt-priv-1a',				#Koppelen aan de route table
  }
 
-#Defineer je Instance
-ec2_instance { 'webserverlin':
- ensure => present,
- region => 'eu-central-1',
- availability_zone => 'eu-central-1a',
- image_id => 'ami-0add4790ba5940e85',
- instance_type => 't2.micro',
- monitoring => false,
- key_name => 'web-vpc',
- security_groups => ['secnat' , 'pinggroup' , 'secsg-ssh'],
- subnet => 'webvpc-pub-1a',
- associate_public_ip_address=> true,
- user_data => template ('/opt/puppetlabs/puppet/modules/aws-examples/update.sh'),
- tags              => {
-    tag_name => 'webserver',
+#Webserver instance aanmaken
+ec2_instance { 'webserverlin':					#Naam van de Instance
+ ensure => present,						#Defineer met present voor creeren of absent voor verwijderen
+ region => 'eu-central-1',					#Defineer Region
+ availability_zone => 'eu-central-1a',				#Kies een Availability zone. Dit kan je vinden op AWS
+ image_id => 'ami-0add4790ba5940e85',				#AMI ID invoeren
+ instance_type => 't2.micro',					#Instance type
+ monitoring => false,						#Monitoring optie
+ key_name => 'web-vpc',						#Aangemaakte keypair invoeren
+ security_groups => ['secnat' , 'pinggroup' , 'secsg-ssh'],	#Welke security group toegevoegd wordt
+ subnet => 'webvpc-pub-1a',					#Welke subnet
+ associate_public_ip_address=> true,				#Optie voor Public IP
+ user_data => template ('/opt/puppetlabs/puppet/modules/aws-examples/update.sh'),   #Userdata template voor commands uitvoeren
+ tags              => {						#Tagname om instances te sorteren die je later gebruiken.
+    tag_name => 'webserver',					#Naam van de tag invoeren
   },
 }
 
+#Tweede Webserver aanmaken
 ec2_instance { 'webserverlin2':
  ensure => present,
  region => 'eu-central-1',
@@ -185,6 +193,7 @@ ec2_instance { 'webserverlin2':
   },
 }
 
+#Derde Webserver aanmaken
 ec2_instance { 'webserverlin3':
  ensure => present,
  region => 'eu-central-1',
@@ -231,4 +240,3 @@ ec2_instance { 'webserverlin3':
 # associate_public_ip_address=> true,
 # user_data => template ('/opt/puppetlabs/puppet/modules/aws-examples/web.sh'),
 #}
-
